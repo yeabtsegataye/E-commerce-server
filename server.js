@@ -7,9 +7,18 @@ require("dotenv").config();
 
 const app = express();
 app.use(cors());
-app.listen(process.env.PORT, () => {
-  console.log(`listening on port ${process.env.PORT}`);
-});
+
+mongoose
+  .connect(process.env.MONGO_DB)
+  .then(() => {
+    // listen for requests
+    app.listen(process.env.PROXY, () => {
+      console.log("connected to db & listening on port", process.env.PROXY);
+    });
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 app.use((req, res, next) => {
   console.log(req.path, req.method);
   next();

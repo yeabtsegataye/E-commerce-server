@@ -1,4 +1,5 @@
-const User = require("../model/userModel");
+const User = require("../model/USERMODEL");
+// import User from "../model/USERMODEL";
 const jwt = require("jsonwebtoken");
 
 const tokens = () => {
