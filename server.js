@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const user_router = require("./router/User_router");
+const cat_router = require("./router/Catagory_router");
 
 require("dotenv").config();
 
@@ -24,3 +25,4 @@ app.use((req, res, next) => {
   next();
 });
 app.use("/ip/user", user_router);
+app.use("/ip/cat", cat_router);
