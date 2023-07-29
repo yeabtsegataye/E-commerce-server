@@ -19,7 +19,9 @@ const registerUser = async (req, res) => {
       Address
     );
     const token = tokens(user._id);
-    return res.status(200).json({ token, Email, Address, Name, Phone, pic });
+    return res
+      .status(200)
+      .json({ token, Email, Address, Name, Phone, pic, isAdmin });
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }
@@ -32,8 +34,9 @@ const authUser = async (req, res) => {
     const Phone = user.Phone;
     const Name = user.Name;
     const pic = user.pic;
+    const isAdmin = user.isAdmin;
     const token = tokens(user._id);
-    res.status(200).json({ token, Email, Address, Name, Phone, pic });
+    res.status(200).json({ token, Email, Address, Name, Phone, pic, isAdmin });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
