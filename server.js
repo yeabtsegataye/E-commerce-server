@@ -7,13 +7,13 @@ require("dotenv").config();
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 mongoose
   .connect(process.env.MONGO_DB)
   .then(() => {
-    // listen for requests
-    app.listen(process.env.PROXY, () => {
-      console.log("connected to db & listening on port", process.env.PROXY);
+    app.listen(process.env.PORT, () => {
+      console.log("connected to db & listening on port", process.env.PORT);
     });
   })
   .catch((error) => {

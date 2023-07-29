@@ -3,35 +3,39 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const schema = mongoose.Schema;
 
-const userModel = schema({
-  Name: { type: "String", required: true },
-  Email: { type: "String", required: true, unique: true },
-  password: { type: "String", required: true },
-  pic: {
-    type: "String",
-    required: true,
-    default:
-      "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+const userModel = schema(
+  {
+    Name: { type: "String", required: true },
+    Email: { type: "String", required: true, unique: true },
+    password: { type: "String", required: true },
+    pic: {
+      type: "String",
+      required: true,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+    },
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    Phone: { type: "Number", required: true },
+    Address: { type: "String", required: true },
+    //   Ads: { type: mongoose.Schema.Types.ObjectId, ref: "ITEMS" },
   },
-  isAdmin: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-  Phone: { type: "Number", required: true, unique: true },
-  Address: { type: "String", required: true },
-  //   Ads: { type: mongoose.Schema.Types.ObjectId, ref: "ITEMS" },
-});
+  { timestamps: true }
+);
 
 userModel.statics.signup = async function (
   Name,
   Email,
   password,
   pic,
-  phone,
+  isAdmin,
+  Phone,
   Address
 ) {
-  if (!Email || !password || !Name || !phone || !Address) {
+  if (!Email || !password || !Name || !Phone || !Address) {
     throw Error("fill the space first");
   }
   const match = await this.findOne({ Email });
@@ -50,7 +54,7 @@ userModel.statics.signup = async function (
     password: hashed,
     pic,
     isAdmin,
-    phone,
+    Phone,
     Address,
   });
   return user;
