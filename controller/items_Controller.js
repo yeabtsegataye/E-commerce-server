@@ -25,16 +25,16 @@ const handle_Items_post = async (req, res) => {
     return res.status(400).json({ message: "fill all the space" });
   }
 
-  const checking_user = await User.findById({ _id: Item_poster });
-  const checking_cat = await catagory.findById({ _id: Item_Category });
+  // const checking_user = await User.findById({ _id: Item_poster });
+  // const checking_cat = await catagory.findById({ _id: Item_Category });
 
-  if (!checking_cat) {
-    return res.status(400).json({ message: "Unknown category" });
-  }
+  // if (!checking_cat) {
+  //   return res.status(400).json({ message: "Unknown category" });
+  // }
 
-  if (!checking_user) {
-    return res.status(400).json({ message: "unauthorized user" });
-  }
+  // if (!checking_user) {
+  //   return res.status(400).json({ message: "unauthorized user" });
+  // }
 
   try {
     var item = await items.create({
@@ -55,10 +55,55 @@ const handle_Items_post = async (req, res) => {
   }
 };
 ////////////////////////
+const handel_Items_one = async (req, res) => {
+  const id = req.params.id;
+  if (!id) {
+    return res.status(400).json({ message: "no category found" });
+  }
+  try {
+    const cat_one = await items.find({ Item_Category: id });
+    if (!cat_one) {
+      return res.status(400).json({ message: "no category found" });
+    }
+    return res.status(200).json({ cat_one });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+//////////////////////
+const handle_UserItems_get = async (req, res) => {
+  const id = req.params.id;
+  if (!id) {
+    return res.status(400).json({ message: "no category found" });
+  }
+  try {
+    const cat_one = await items.find({ Item_poster: id });
+    if (!cat_one) {
+      return res.status(400).json({ message: "no category found" });
+    }
+    return res.status(200).json({ cat_one });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+////////////////////////
 const handle_AllItems_get = async (req, res) => {
   try {
     const all_Items = await items
       .find()
+      .populate("Item_poster")
+      .populate("Item_Category");
+    return res.status(200).json({ all_Items });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+//////////////////////////
+const handle_oneItems_get = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const all_Items = await items
+      .findById(id)
       .populate("Item_poster")
       .populate("Item_Category");
     return res.status(200).json({ all_Items });
@@ -169,4 +214,7 @@ module.exports = {
   handle_AllItems_get,
   handle_Items_put,
   handle_Items_delete,
+  handel_Items_one,
+  handle_oneItems_get,
+  handle_UserItems_get,
 };
