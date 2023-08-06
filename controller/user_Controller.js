@@ -21,9 +21,10 @@ const registerUser = async (req, res) => {
       Address
     );
     const token = tokens(user._id);
+    const id = user._id;
     return res
       .status(200)
-      .json({ token, Email, Address, Name, Phone, pic, isAdmin });
+      .json({ id, token, Email, Address, Name, Phone, pic, isAdmin });
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }
@@ -39,7 +40,11 @@ const authUser = async (req, res) => {
     const pic = user.pic;
     const isAdmin = user.isAdmin;
     const token = tokens(user._id);
-    res.status(200).json({ token, Email, Address, Name, Phone, pic, isAdmin });
+    const id = user._id;
+
+    res
+      .status(200)
+      .json({ id, token, Email, Address, Name, Phone, pic, isAdmin });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

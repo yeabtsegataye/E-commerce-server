@@ -1,5 +1,6 @@
 const catagory = require("../model/CATAGORY");
 const User = require("../model/USERMODEL");
+
 const handle_cat_post = async (req, res) => {
   const { catagory_Name, cat_description, cat_pic } = req.body;
   if (!catagory_Name || !cat_description) {

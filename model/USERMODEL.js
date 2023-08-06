@@ -66,7 +66,7 @@ userModel.statics.login = async function (Email, password) {
 
   const user = await this.findOne({ Email });
   if (!user) {
-    throw Error("user not found email");
+    throw Error("user not found");
   }
 
   const match = await bcrypt.compare(password, user.password);
