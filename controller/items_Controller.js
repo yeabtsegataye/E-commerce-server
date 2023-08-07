@@ -91,6 +91,7 @@ const handle_AllItems_get = async (req, res) => {
   try {
     const all_Items = await items
       .find()
+      .sort({ createdAt: -1 })
       .populate("Item_poster")
       .populate("Item_Category");
     return res.status(200).json({ all_Items });
@@ -204,6 +205,7 @@ const handle_Items_search = async (req, res) => {
         ],
       }
     : {};
+
   const Item = await items.find(keyword);
   //
   return res.json({ Item });

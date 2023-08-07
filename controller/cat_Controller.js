@@ -3,7 +3,7 @@ const User = require("../model/USERMODEL");
 
 const handle_cat_post = async (req, res) => {
   const { catagory_Name, cat_description, cat_pic } = req.body;
-  if (!catagory_Name || !cat_description) {
+  if (!catagory_Name || !cat_description || cat_pic) {
     return res.status(400).json({ message: "fill all the space" });
   }
   try {
