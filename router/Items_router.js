@@ -1,4 +1,6 @@
 const express = require("express");
+//const { protect } = require('../middleware/requireAuth'); // If you have auth middleware
+
 const {
   handle_Items_post,
   handle_AllItems_get,
@@ -11,7 +13,7 @@ const {
 } = require("../controller/items_Controller");
 const Router = express.Router();
 
-Router.post("/newitems", handle_Items_post);
+Router.post('/newitems', handle_Items_post);
 Router.get("/catitems/:id", handel_Items_one);
 Router.get("/allitems", handle_AllItems_get);
 Router.get("/oneitem/:id", handle_oneItems_get);

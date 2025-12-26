@@ -1,59 +1,101 @@
 const items = require("../model/ITEMS");
 const catagory = require("../model/CATAGORY");
 const User = require("../model/USERMODEL");
+const upload = require("../middleware/multer");
+const { uploadToCloudinary } = require("../utils/cloudinary");
 
-const handle_Items_post = async (req, res) => {
-  const {
-    Item_Name,
-    Item_Description,
-    Item_Brand,
-    Item_Price,
-    Item_Images,
-    Item_Category,
-    Item_poster,
-  } = req.body;
+const handle_Items_post = [
+  upload.single("Item_Images"), // Single file upload
 
-  if (
-    !Item_Name ||
-    !Item_Description ||
-    !Item_Brand ||
-    !Item_Price ||
-    !Item_Images ||
-    !Item_Category ||
-    !Item_poster
-  ) {
-    return res.status(400).json({ message: "fill all the space" });
-  }
+  async (req, res) => {
+    try {
+      const {
+        Item_Name,
+        Item_Description,
+        Item_Brand,
+        Item_Price,
+        Item_Category,
+        Item_poster,
+      } = req.body;
 
-  // const checking_user = await User.findById({ _id: Item_poster });
-  // const checking_cat = await catagory.findById({ _id: Item_Category });
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ message: "Please upload an image" });
+      }
 
-  // if (!checking_cat) {
-  //   return res.status(400).json({ message: "Unknown category" });
-  // }
+      // Validate required fields
+      if (
+        !Item_Name ||
+        !Item_Description ||
+        !Item_Brand ||
+        !Item_Price ||
+        !Item_Category ||
+        !Item_poster
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Please fill all required fields" });
+      }
 
-  // if (!checking_user) {
-  //   return res.status(400).json({ message: "unauthorized user" });
-  // }
+      // Verify user exists
+      const checking_user = await User.findById(Item_poster);
+      if (!checking_user) {
+        return res.status(401).json({ message: "Unauthorized user" });
+      }
 
-  try {
-    var item = await items.create({
-      Item_Name,
-      Item_Description,
-      Item_Brand,
-      Item_Price,
-      Item_Images,
-      Item_Category,
-      Item_poster,
-    });
-    item = await item.populate("Item_Category");
-    item = await item.populate("Item_poster");
+      // Verify category exists
+      const checking_cat = await catagory.findById(Item_Category);
+      if (!checking_cat) {
+        return res.status(400).json({ message: "Unknown category" });
+      }
 
-    return res.status(200).json({ item });
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-};
+      // Upload image to Cloudinary
+      let cloudinaryResult;
+      try {
+        cloudinaryResult = await uploadToCloudinary(req.file.buffer, {
+          folder: "ecommerce-items",
+          transformation: [
+            { width: 800, height: 800, crop: "limit" },
+            { quality: "auto:good" },
+          ],
+        });
+      } catch (uploadError) {
+        console.error("Cloudinary upload error:", uploadError);
+        return res.status(500).json({ message: "Failed to upload image" });
+      }
+
+      // Create item with Cloudinary image data
+      let item = await items.create({
+        Item_Name,
+        Item_Description,
+        Item_Brand,
+        Item_Price: Number(Item_Price),
+        Item_Images: cloudinaryResult.secure_url, // Just the URL string
+        Item_Category,
+        Item_poster,
+      });
+
+      // Populate references
+      item = await item.populate("Item_Category");
+      item = await item.populate("Item_poster");
+
+      return res.status(201).json({
+        message: "Item created successfully",
+        item: {
+          ...item.toObject(),
+          Item_Images: cloudinaryResult.secure_url, // Send URL for frontend
+        },
+      });
+    } catch (error) {
+      console.error("Error creating item:", error);
+      return res.status(500).json({
+        message: "Internal server error",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  },
+];
 ////////////////////////
 const handel_Items_one = async (req, res) => {
   const id = req.params.id;
