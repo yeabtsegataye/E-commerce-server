@@ -21,6 +21,10 @@ const userModel = schema(
     },
     Phone: { type: "Number", required: true },
     Address: { type: "String", required: true },
+    IsBan: { type: Boolean,
+      required: true,
+      default: false, },
+
     //   Ads: { type: mongoose.Schema.Types.ObjectId, ref: "ITEMS" },
   },
   { timestamps: true }
@@ -33,6 +37,7 @@ userModel.statics.signup = async function (
   pic,
   isAdmin,
   Phone,
+  IsBan,
   Address
 ) {
   if (!Email || !password || !Name || !Phone || !Address) {
@@ -55,6 +60,7 @@ userModel.statics.signup = async function (
     pic,
     isAdmin,
     Phone,
+    IsBan,
     Address,
   });
   return user;
@@ -70,9 +76,14 @@ userModel.statics.login = async function (Email, password) {
   }
 
   const match = await bcrypt.compare(password, user.password);
+
   if (!match) {
     throw Error("Incorrect password");
   }
+    if (user.IsBan) {
+      console.log(user,'iss')
+    throw Error("User is band");
+  } 
 
   return user;
 };

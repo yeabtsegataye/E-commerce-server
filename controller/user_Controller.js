@@ -7,29 +7,28 @@ const tokens = (id) => {
   return jwt.sign({ id }, process.env.SECRET, { expiresIn: "3d" });
 };
 /////////////////////////
-const registerUser = async (req, res) => {
-  const { Name, Email, password, pic, isAdmin, Phone, Address } = req.body;
+// const registerUser = async (req, res) => {
+//   const { Name, Email, password, pic, isAdmin, Phone, Address } = req.body;
 
-  try {
-    const user = await User.signup(
-      Name,
-      Email,
-      password,
-      pic,
-      isAdmin,
-      Phone,
-      Address
-    );
-    const token = tokens(user._id);
-    const id = user._id;
-    return res
-      .status(200)
-      .json({ id, token, Email, Address, Name, Phone, pic, isAdmin });
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-};
-/////////////////////////
+//   try {
+//     const user = await User.signup(
+//       Name,
+//       Email,
+//       password,
+//       pic,
+//       isAdmin,
+//       Phone,
+//       Address
+//     );
+//     const token = tokens(user._id);
+//     const id = user._id;
+//     return res
+//       .status(200)
+//       .json({ id, token, Email, Address, Name, Phone, pic, isAdmin });
+//   } catch (error) {
+//     return res.status(400).json({ error: error.message });
+//   }
+// };
 const authUser = async (req, res) => {
   const { Email, password } = req.body;
   try {
@@ -69,7 +68,6 @@ const handel_mypost = async (req, res) => {
   }
 };
 module.exports = {
-  registerUser,
   authUser,
   handel_mypost,
 };

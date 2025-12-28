@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const user_router = require("./router/User_router");
 const cat_router = require("./router/Catagory_router");
 const items_router = require("./router/Items_router");
+const adminRoutes = require("./router/adminRoutes");
 
 const app = express();
 app.use(cors());
@@ -32,12 +33,4 @@ app.use((req, res, next) => {
 app.use("/ip/user", user_router);
 app.use("/ip/cat", cat_router);
 app.use("/ip/item", items_router);
-
-// Health check endpoint
-// app.get("/", (req, res) => {
-//   res.json({ 
-//     message: "Server is running",
-//     cloudinary: process.env.CLOUDINARY_CLOUD_NAME ? "Configured" : "Not configured"
-//   });
-// });
-
+app.use("/api/admin", adminRoutes);
