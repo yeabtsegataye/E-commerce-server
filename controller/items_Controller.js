@@ -16,6 +16,9 @@ const handle_Items_post = [
         Item_Price,
         Item_Category,
         Item_poster,
+        Item_Status,
+        Item_Age,
+        Item_Gender
       } = req.body;
 
       // Check if file was uploaded
@@ -73,6 +76,9 @@ const handle_Items_post = [
         Item_Images: cloudinaryResult.secure_url, // Just the URL string
         Item_Category,
         Item_poster,
+        Item_Status,
+        Item_Age,
+        Item_Gender
       });
 
       // Populate references
@@ -163,6 +169,9 @@ const handle_Items_put = async (req, res) => {
     Item_Price,
     Item_Images,
     Item_Category,
+     Item_Status,
+        Item_Age,
+        Item_Gender,
     Item_id,
     user_id,
   } = req.body;
@@ -196,7 +205,17 @@ const handle_Items_put = async (req, res) => {
   if (Item_Category) {
     changing.Item_Category = Item_Category;
   }
+  if (Item_Status) {
+    changing.Item_Status = Item_Status;
+  }
 
+  if (Item_Age) {
+    changing.Item_Age = Item_Age;
+  }
+
+  if (Item_Gender) {
+    changing.Item_Gender = Item_Gender;
+  }
   try {
     const checking_user = await User.findById(user_id);
     const checking_item = await items.findById(Item_id);
