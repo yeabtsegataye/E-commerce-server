@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const items = require("../model/ITEMS");
 const catagory = require("../model/CATAGORY");
 const User = require("../model/USERMODEL");
@@ -10,10 +11,15 @@ const handle_Items_post = [
   async (req, res) => {
     try {
       const {
+        Barcode,
         Item_Name,
         Item_Description,
         Item_Brand,
         Item_Price,
+        Item_BoughtPrice,
+        Item_SellingPrice,
+        StockQty,
+        IsEnabled,
         Item_Category,
         Item_poster,
         Item_Status,
@@ -26,18 +32,24 @@ const handle_Items_post = [
         return res.status(400).json({ message: "Please upload an image" });
       }
 
+      const sellingInput =
+        Item_SellingPrice != null && Item_SellingPrice !== ""
+          ? Number(Item_SellingPrice)
+          : Number(Item_Price);
+
       // Validate required fields
       if (
         !Item_Name ||
         !Item_Description ||
         !Item_Brand ||
-        !Item_Price ||
         !Item_Category ||
-        !Item_poster
+        !Item_poster ||
+        Number.isNaN(sellingInput) ||
+        sellingInput < 0
       ) {
         return res
           .status(400)
-          .json({ message: "Please fill all required fields" });
+          .json({ message: "Please fill all required fields (including selling price)" });
       }
 
       // Verify user exists
@@ -67,18 +79,31 @@ const handle_Items_post = [
         return res.status(500).json({ message: "Failed to upload image" });
       }
 
+      const bought =
+        Item_BoughtPrice != null && Item_BoughtPrice !== ""
+          ? Number(Item_BoughtPrice)
+          : 0;
+
       // Create item with Cloudinary image data
       let item = await items.create({
+        Barcode: Barcode?.trim() || undefined,
         Item_Name,
         Item_Description,
         Item_Brand,
-        Item_Price: Number(Item_Price),
+        // Backwards compatibility: Item_Price is selling price
+        Item_Price: sellingInput,
+        Item_BoughtPrice: bought,
+        Item_SellingPrice: sellingInput,
+        StockQty:
+          StockQty != null && StockQty !== "" ? Number(StockQty) : undefined,
+        IsEnabled: IsEnabled != null ? String(IsEnabled) === "true" : undefined,
         Item_Images: cloudinaryResult.secure_url, // Just the URL string
         Item_Category,
         Item_poster,
         Item_Status,
-        Item_Age,
-        Item_Gender
+        Item_Age:
+          Item_Age != null && Item_Age !== "" ? Number(Item_Age) : 0,
+        Item_Gender: Item_Gender || "unisex",
       });
 
       // Populate references
@@ -94,6 +119,9 @@ const handle_Items_post = [
       });
     } catch (error) {
       console.error("Error creating item:", error);
+      if (error?.code === 11000) {
+        return res.status(409).json({ message: "Barcode already exists" });
+      }
       return res.status(500).json({
         message: "Internal server error",
         error:
@@ -138,8 +166,9 @@ const handle_UserItems_get = async (req, res) => {
 const handle_AllItems_get = async (req, res) => {
   try {
     const all_Items = await items
-      .find()
+      .find({ IsEnabled: true })
       .sort({ createdAt: -1 })
+      .select("-Item_BoughtPrice -Sales.boughtPrice")
       .populate("Item_poster")
       .populate("Item_Category");
     return res.status(200).json({ all_Items });
@@ -151,10 +180,29 @@ const handle_AllItems_get = async (req, res) => {
 const handle_oneItems_get = async (req, res) => {
   const id = req.params.id;
   try {
-    const all_Items = await items
-      .findById(id)
-      .populate("Item_poster")
-      .populate("Item_Category");
+    let isAdmin = false;
+    const auth = req.headers.authorization;
+    if (auth?.startsWith("Bearer ")) {
+      try {
+        const decoded = jwt.verify(auth.split(" ")[1], process.env.SECRET);
+        const u = await User.findById(decoded.id).select("isAdmin");
+        isAdmin = u?.isAdmin === true;
+      } catch {
+        isAdmin = false;
+      }
+    }
+
+    let q = items.findById(id).populate("Item_poster").populate("Item_Category");
+    if (!isAdmin) {
+      q = q.select("-Item_BoughtPrice -Sales");
+    }
+    const all_Items = await q;
+    if (!all_Items) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    if (!isAdmin && all_Items.IsEnabled === false) {
+      return res.status(404).json({ message: "Item not found" });
+    }
     return res.status(200).json({ all_Items });
   } catch (error) {
     return res.status(400).json({ message: error.message });
@@ -267,7 +315,9 @@ const handle_Items_search = async (req, res) => {
       }
     : {};
 
-  const Item = await items.find(keyword);
+  const Item = await items
+    .find({ ...keyword, IsEnabled: true })
+    .select("-Item_BoughtPrice -Sales.boughtPrice");
   //
   return res.json({ Item });
 };

@@ -3,6 +3,13 @@ const Schema = mongoose.Schema;
 
 const ITEMS_SCHEMA = new Schema(
   {
+    Barcode: {
+      type: String,
+      trim: true,
+      index: true,
+      unique: true,
+      sparse: true,
+    },
     Item_Name: { 
       type: String, 
       required: [true, "Item name is required"],
@@ -30,6 +37,41 @@ const ITEMS_SCHEMA = new Schema(
       required: [true, "Price is required"],
       min: [0, "Price cannot be negative"]
     },
+    Item_BoughtPrice: {
+      type: Number,
+      min: [0, "Bought price cannot be negative"],
+      default: 0,
+    },
+    Item_SellingPrice: {
+      type: Number,
+      min: [0, "Selling price cannot be negative"],
+      default: 0,
+    },
+    StockQty: {
+      type: Number,
+      min: [0, "Stock cannot be negative"],
+      default: 0,
+      index: true,
+    },
+    IsEnabled: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    SoldQty: {
+      type: Number,
+      min: [0, "Sold quantity cannot be negative"],
+      default: 0,
+      index: true,
+    },
+    Sales: [
+      {
+        qty: { type: Number, min: 1, required: true },
+        soldAt: { type: Date, default: Date.now, index: true },
+        sellingPrice: { type: Number, min: 0, required: true },
+        boughtPrice: { type: Number, min: 0, default: 0 },
+      },
+    ],
     Item_Images: {
       type: String,
       required: [true, "Image is required"],
@@ -45,17 +87,16 @@ const ITEMS_SCHEMA = new Schema(
       enum: ["available", "sold", "reserved"],
       default: "available" 
     },
-    Item_Gender: { 
-      type: String, 
+    Item_Gender: {
+      type: String,
       enum: ["male", "female", "unisex"],
-      default: "male",
-      required: [true, "Gender is required"]
+      default: "unisex",
     },
-    Item_Age: { 
-      type: Number, 
-      required: [true, "Age is required"],
+    Item_Age: {
+      type: Number,
+      default: 0,
       min: [0, "Age cannot be negative"],
-      max: [100, "Age cannot exceed 100"]
+      max: [100, "Age cannot exceed 100"],
     },
     Item_Condition: { // Optional: Consider adding this field
       type: String,
@@ -75,5 +116,6 @@ ITEMS_SCHEMA.index({ Item_Category: 1 });
 ITEMS_SCHEMA.index({ Item_Status: 1 });
 ITEMS_SCHEMA.index({ Item_poster: 1 });
 ITEMS_SCHEMA.index({ createdAt: -1 });
+ITEMS_SCHEMA.index({ Barcode: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Item", ITEMS_SCHEMA);
