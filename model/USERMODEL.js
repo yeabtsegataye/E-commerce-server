@@ -25,6 +25,10 @@ const userModel = schema(
       required: true,
       default: false, },
 
+    // Password reset (store only hashed token)
+    passwordResetTokenHash: { type: String, default: null },
+    passwordResetExpiresAt: { type: Date, default: null },
+
     //   Ads: { type: mongoose.Schema.Types.ObjectId, ref: "ITEMS" },
   },
   { timestamps: true }
