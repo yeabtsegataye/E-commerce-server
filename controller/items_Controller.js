@@ -164,14 +164,31 @@ const handle_UserItems_get = async (req, res) => {
 };
 ////////////////////////
 const handle_AllItems_get = async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(24, Math.max(8, Number(req.query.limit) || 12));
+  const skip = (page - 1) * limit;
+
   try {
-    const all_Items = await items
-      .find({ IsEnabled: true })
-      .sort({ createdAt: -1 })
-      .select("-Item_BoughtPrice -Sales.boughtPrice")
-      .populate("Item_poster")
-      .populate("Item_Category");
-    return res.status(200).json({ all_Items });
+    const query = { IsEnabled: true };
+
+    const [all_Items, totalCount] = await Promise.all([
+      items
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("Item_poster")
+        .populate("Item_Category"),
+      items.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      all_Items,
+      page,
+      limit,
+      totalCount,
+      hasMore: skip + all_Items.length < totalCount,
+    });
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }

@@ -35,13 +35,14 @@ const sha256 = (value) =>
 
 const sendResetEmailOrLog = async ({ to, resetUrl }) => {
   // Optional SMTP settings. If missing, we log the reset URL (safe for dev).
-  const host = process.env.SMTP_HOST;
+    const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+  const from = process.env.SMTP_FROM || user;
+  const isGmail = !host && user && String(user).toLowerCase().endsWith("@gmail.com");
 
-  if (!host || !port || !user || !pass || !from) {
+  if (!user || !pass || !from) {
     console.log("🔐 Password reset link (SMTP not configured):", resetUrl);
     return;
   }
@@ -49,12 +50,19 @@ const sendResetEmailOrLog = async ({ to, resetUrl }) => {
   // Lazy-load nodemailer only when configured
   // eslint-disable-next-line global-require
   const nodemailer = require("nodemailer");
-  const transporter = nodemailer.createTransport({
-    host,
-    port: Number(port),
-    secure: Number(port) === 465,
-    auth: { user, pass },
-  });
+  const transporter = nodemailer.createTransport(
+    isGmail
+      ? {
+          service: "gmail",
+          auth: { user, pass },
+        }
+      : {
+          host,
+          port: Number(port),
+          secure: Number(port) === 465,
+          auth: { user, pass },
+        }
+  );
 
   await transporter.sendMail({
     from,
